@@ -1,11 +1,24 @@
+"use client";
+
 type OpeningProps = {
   onOpen?: () => void;
 };
 
 export default function Opening({ onOpen }: OpeningProps) {
+  function handleOpen() {
+    onOpen?.();
+
+    const greeting = document.getElementById("greeting");
+
+    greeting?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+
   return (
     <section className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
-      <p className="text-sm uppercase tracking-[0.35em]">
+      <p className="text-sm uppercase tracking-[0.35em] text-[#72555d]">
         An Invitation
       </p>
 
@@ -13,7 +26,7 @@ export default function Opening({ onOpen }: OpeningProps) {
         Nishita
       </h1>
 
-      <p className="my-3 text-2xl italic">&</p>
+      <p className="my-3 text-2xl italic text-[#8b646d]">&</p>
 
       <h1 className="text-5xl font-semibold tracking-tight sm:text-7xl">
         Mayur
@@ -25,8 +38,8 @@ export default function Opening({ onOpen }: OpeningProps) {
 
       <button
         type="button"
-        onClick={onOpen}
-        className="mt-12 rounded-full bg-[#321f24] px-8 py-3 text-sm font-medium text-white transition hover:scale-105"
+        onClick={handleOpen}
+        className="mt-12 rounded-full bg-[#321f24] px-8 py-3 text-sm font-medium text-white transition hover:scale-105 active:scale-95"
       >
         Open Invitation
       </button>
