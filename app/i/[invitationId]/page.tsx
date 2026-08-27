@@ -67,7 +67,7 @@ export default async function InvitationPage({
         </div>
       </section>
 
-      <RSVP />
+      <RSVP token={invitationId} />
 
       <Closing />
     </main>
