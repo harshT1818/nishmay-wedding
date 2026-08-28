@@ -27,46 +27,50 @@ export async function POST(
 
     const mediaType =
       typeof body.mediaType ===
-        "string" &&
-      VALID_MEDIA_TYPES.includes(
-        body.mediaType,
-      )
+      "string"
         ? body.mediaType
-        : null;
+        : "";
 
     const guestName =
       typeof body.guestName ===
       "string"
-        ? body.guestName
-            .trim()
-            .slice(0, 120) ||
-          null
+        ? body.guestName.trim()
         : null;
 
     const caption =
       typeof body.caption ===
       "string"
-        ? body.caption
-            .trim()
-            .slice(0, 500) ||
-          null
+        ? body.caption.trim()
         : null;
 
     const eventId =
       typeof body.eventId ===
-        "string" &&
-      body.eventId.length > 0
-        ? body.eventId
+      "string" &&
+      body.eventId.trim()
+        ? body.eventId.trim()
         : null;
 
+    if (!mediaUrl) {
+      return NextResponse.json(
+        {
+          error:
+            "Media URL is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
     if (
-      !mediaUrl ||
-      !mediaType
+      !VALID_MEDIA_TYPES.includes(
+        mediaType,
+      )
     ) {
       return NextResponse.json(
         {
           error:
-            "Invalid media submission.",
+            "Invalid media type.",
         },
         {
           status: 400,
@@ -81,22 +85,26 @@ export async function POST(
       data,
       error,
     } = await supabase
-      .from("wedding_media")
+      .from(
+        "wedding_media",
+      )
       .insert({
-        event_id: eventId,
+        event_id:
+          eventId,
         media_type:
           mediaType,
         media_url:
           mediaUrl,
         guest_name:
-          guestName,
-        caption,
-        source: "guest",
-
-        // Mandatory moderation.
-        status: "pending",
-
-        is_featured: false,
+          guestName || null,
+        caption:
+          caption || null,
+        source:
+          "guest",
+        status:
+          "pending",
+        is_featured:
+          false,
       })
       .select(
         `
@@ -108,14 +116,14 @@ export async function POST(
 
     if (error) {
       console.error(
-        "Wedding media insert failed:",
+        "Wedding media submission failed:",
         error,
       );
 
       return NextResponse.json(
         {
           error:
-            "Unable to submit your moment.",
+            "Unable to submit media.",
         },
         {
           status: 500,
@@ -123,22 +131,28 @@ export async function POST(
       );
     }
 
-    return NextResponse.json({
-      submission: data,
-    });
+    return NextResponse.json(
+      {
+        submission:
+          data,
+      },
+      {
+        status: 201,
+      },
+    );
   } catch (error) {
     console.error(
-      "Wedding media API failed:",
+      "Wedding media API error:",
       error,
     );
 
     return NextResponse.json(
       {
         error:
-          "Unable to submit your moment.",
+          "Invalid request.",
       },
       {
-        status: 500,
+        status: 400,
       },
     );
   }
