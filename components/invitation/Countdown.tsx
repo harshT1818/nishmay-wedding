@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-
-const WEDDING_DATE = new Date("2027-02-15T00:00:00+05:30");
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 
 type TimeLeft = {
   days: number;
@@ -12,10 +10,14 @@ type TimeLeft = {
   seconds: number;
 };
 
-function calculateTimeLeft(): TimeLeft {
-  const difference = WEDDING_DATE.getTime() - Date.now();
+const targetDate = new Date("2027-02-15T00:00:00+05:30");
 
-  if (difference <= 0) {
+function getTimeLeft(): TimeLeft {
+  const now = new Date();
+
+  const diff = targetDate.getTime() - now.getTime();
+
+  if (diff <= 0) {
     return {
       days: 0,
       hours: 0,
@@ -25,110 +27,180 @@ function calculateTimeLeft(): TimeLeft {
   }
 
   return {
-    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-    hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-    minutes: Math.floor((difference / (1000 * 60)) % 60),
-    seconds: Math.floor((difference / 1000) % 60),
+    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+    minutes: Math.floor((diff / (1000 * 60)) % 60),
+    seconds: Math.floor((diff / 1000) % 60),
   };
+}
+
+function TickerNumber({
+  value,
+}: {
+  value: number;
+}) {
+  const formatted = String(value).padStart(2, "0");
+
+  return (
+    <div className="relative flex h-[52px] items-center justify-center overflow-hidden sm:h-[72px]">
+      <AnimatePresence initial={false} mode="popLayout">
+        <motion.div
+          key={formatted}
+          initial={{
+            y: 12,
+            opacity: 0,
+          }}
+          animate={{
+            y: 0,
+            opacity: 1,
+          }}
+          exit={{
+            y: -12,
+            opacity: 0,
+          }}
+          transition={{
+            duration: 0.7,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="absolute font-display text-4xl tracking-[-0.04em] sm:text-6xl"
+        >
+          {formatted}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function TimeUnit({
+  value,
+  label,
+}: {
+  value: number;
+  label: string;
+}) {
+  return (
+    <div className="relative px-2 py-6 text-center sm:px-6 sm:py-8">
+      <TickerNumber value={value} />
+
+      <p className="mt-2 text-[8px] uppercase tracking-[0.28em] text-[#d7c1a5]/65 sm:text-[9px]">
+        {label}
+      </p>
+    </div>
+  );
 }
 
 export default function Countdown() {
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
 
   useEffect(() => {
-    setTimeLeft(calculateTimeLeft());
+    setTimeLeft(getTimeLeft());
 
-    const timer = window.setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
+    const interval = window.setInterval(() => {
+      setTimeLeft(getTimeLeft());
     }, 1000);
 
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(interval);
+    };
   }, []);
 
-  const items = timeLeft
-    ? [
-        {
-          value: timeLeft.days,
-          label: "Days",
-        },
-        {
-          value: timeLeft.hours,
-          label: "Hours",
-        },
-        {
-          value: timeLeft.minutes,
-          label: "Minutes",
-        },
-        {
-          value: timeLeft.seconds,
-          label: "Seconds",
-        },
-      ]
-    : [
-        { value: "—", label: "Days" },
-        { value: "—", label: "Hours" },
-        { value: "—", label: "Minutes" },
-        { value: "—", label: "Seconds" },
-      ];
+  const complete = useMemo(() => {
+    if (!timeLeft) {
+      return false;
+    }
+
+    return (
+      timeLeft.days === 0 &&
+      timeLeft.hours === 0 &&
+      timeLeft.minutes === 0 &&
+      timeLeft.seconds === 0
+    );
+  }, [timeLeft]);
 
   return (
-    <section className="relative overflow-hidden bg-[#35151c] px-6 py-20 text-[#f8f0e4] sm:py-24">
-      <div className="pointer-events-none absolute left-[-120px] top-[-120px] h-[380px] w-[380px] rounded-full bg-[#b45e43]/20 blur-[120px]" />
+    <section className="relative overflow-hidden bg-[#35151c] px-5 py-20 text-[#f6f0e6] sm:py-24">
+      <div className="pointer-events-none absolute left-1/2 top-0 h-64 w-64 -translate-x-1/2 rounded-full bg-[#b45e43]/10 blur-3xl" />
 
-      <div className="pointer-events-none absolute bottom-[-180px] right-[-100px] h-[420px] w-[420px] rounded-full bg-[#d49a52]/10 blur-[130px]" />
-
-      <div className="relative mx-auto max-w-6xl">
+      <div className="relative mx-auto max-w-5xl">
         <div className="text-center">
-          <p className="text-[10px] uppercase tracking-[0.42em] text-[#d8bd8c]">
-            Until forever begins
-          </p>
+          <motion.p
+            initial={{
+              opacity: 0,
+              y: 10,
+            }}
+            whileInView={{
+              opacity: 1,
+              y: 0,
+            }}
+            viewport={{
+              once: true,
+            }}
+            transition={{
+              duration: 0.75,
+            }}
+            className="text-[9px] uppercase tracking-[0.42em] text-[#d8bd8c]"
+          >
+            Counting down
+          </motion.p>
 
-          <h2 className="font-display mt-6 text-4xl tracking-[-0.04em] sm:text-6xl">
-            The countdown is on.
-          </h2>
-
-          <p className="mt-4 text-sm text-[#d8bd8c]/65">
-            15 February 2027
-          </p>
+          <motion.h2
+            initial={{
+              opacity: 0,
+              y: 18,
+            }}
+            whileInView={{
+              opacity: 1,
+              y: 0,
+            }}
+            viewport={{
+              once: true,
+            }}
+            transition={{
+              delay: 0.08,
+              duration: 0.95,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+            className="font-display mt-4 text-4xl tracking-[-0.04em] sm:text-5xl"
+          >
+            Until the big day.
+          </motion.h2>
         </div>
 
-        <div className="mt-14 grid grid-cols-2 gap-px overflow-hidden rounded-[28px] border border-[#d8bd8c]/15 bg-[#d8bd8c]/15 sm:grid-cols-4">
-          {items.map((item, index) => (
-            <motion.div
-              key={item.label}
-              initial={{
-                opacity: 0,
-                y: 18,
-              }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-              }}
-              viewport={{
-                once: true,
-              }}
-              transition={{
-                delay: index * 0.08,
-                duration: 0.7,
-              }}
-              className="bg-[#35151c] px-5 py-7 text-center sm:py-9"
-            >
-              <p className="font-display text-4xl tabular-nums tracking-[-0.05em] sm:text-6xl">
-                {item.value}
-              </p>
+        {!timeLeft ? (
+          <div className="mt-10 h-28" />
+        ) : complete ? (
+          <div className="mt-10 border-y border-white/10 py-10 text-center">
+            <p className="font-editorial text-2xl text-[#d8bd8c]">
+              The celebrations have begun.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-10 grid grid-cols-4 divide-x divide-white/10 border-y border-white/10">
+            <TimeUnit
+              value={timeLeft.days}
+              label="Days"
+            />
 
-              <p className="mt-3 text-[9px] uppercase tracking-[0.32em] text-[#d8bd8c]/65">
-                {item.label}
-              </p>
-            </motion.div>
-          ))}
-        </div>
+            <TimeUnit
+              value={timeLeft.hours}
+              label="Hours"
+            />
 
-        <div className="mx-auto mt-12 max-w-xl text-center">
-          <p className="font-editorial text-xl text-[#d8bd8c]">
-            One celebration. A lifetime of stories.
-          </p>
-        </div>
+            <TimeUnit
+              value={timeLeft.minutes}
+              label="Minutes"
+            />
+
+            <TimeUnit
+              value={timeLeft.seconds}
+              label="Seconds"
+            />
+          </div>
+        )}
+
+        <p className="font-editorial mt-8 text-center text-sm text-[#d8bd8c]/80">
+          15 February 2027
+        </p>
       </div>
     </section>
   );

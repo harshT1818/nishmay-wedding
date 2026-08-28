@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import type { WeddingEvent } from "@/types/invitation";
+import VenueMap from "@/components/invitation/VenueMap";
 
 type EventCardProps = {
   event: WeddingEvent;
@@ -172,25 +173,14 @@ export default function EventCard({
             </div>
           )}
         </div>
-
-        {/* CTA */}
-        {event.mapsUrl && (
-          <div className="sm:pt-1">
-            <a
-              href={event.mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-10 items-center gap-2 rounded-full border border-[#35151c]/15 px-4 text-[10px] uppercase tracking-[0.12em] transition-all duration-300 hover:border-[#35151c] hover:bg-[#35151c] hover:text-white"
-            >
-              <Navigation
-                size={13}
-                strokeWidth={1.5}
-              />
-
-              Directions
-            </a>
-          </div>
-        )}
+        
+          <VenueMap
+            venue={event.venue}
+            location={event.location}
+            address={event.address}
+            mapsUrl={event.mapsUrl}
+          />
+       
       </div>
     </motion.article>
   );
