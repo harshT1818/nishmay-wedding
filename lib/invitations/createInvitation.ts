@@ -1,5 +1,9 @@
 import "server-only";
 
+import {
+  encryptInvitationToken,
+} from "@/lib/invitations/encryption";
+
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
   generateInvitationToken,
@@ -27,19 +31,23 @@ export async function createInvitation({
   const token = generateInvitationToken();
   const tokenHash = hashInvitationToken(token);
 
-  const {
-    data: invitation,
-    error: invitationError,
-  } = await supabase
-    .from("invitations")
-    .insert({
-      guest_id: guestId,
-      token_hash: tokenHash,
-      status: "active",
-      expires_at: expiresAt,
-    })
-    .select("id")
-    .single();
+  const tokenEncrypted =
+  encryptInvitationToken(token);
+
+ const {
+  data: invitation,
+  error: invitationError,
+} = await supabase
+  .from("invitations")
+  .insert({
+    guest_id: guestId,
+    token_hash: tokenHash,
+    token_encrypted: tokenEncrypted,
+    status: "active",
+    expires_at: expiresAt,
+  })
+  .select("id")
+  .single();
 
   if (invitationError) {
     throw new Error(

@@ -1,86 +1,197 @@
-import { MapPin, Navigation } from "lucide-react";
+"use client";
+
+import { motion } from "framer-motion";
+import {
+  CalendarDays,
+  Clock3,
+  MapPin,
+  Navigation,
+} from "lucide-react";
+
 import type { WeddingEvent } from "@/types/invitation";
 
 type EventCardProps = {
   event: WeddingEvent;
+  index?: number;
 };
 
-export default function EventCard({ event }: EventCardProps) {
+const eventAccents = [
+  {
+    line: "bg-[#b45e43]",
+    number: "text-[#b45e43]",
+  },
+  {
+    line: "bg-[#b99155]",
+    number: "text-[#b99155]",
+  },
+  {
+    line: "bg-[#8e4438]",
+    number: "text-[#8e4438]",
+  },
+  {
+    line: "bg-[#8c6a4a]",
+    number: "text-[#8c6a4a]",
+  },
+  {
+    line: "bg-[#35151c]",
+    number: "text-[#35151c]",
+  },
+];
+
+export default function EventCard({
+  event,
+  index = 0,
+}: EventCardProps) {
+  const accent =
+    eventAccents[index % eventAccents.length];
+
   return (
-    <article className="rounded-3xl border border-[#dfd5ca] bg-white p-6 shadow-sm sm:p-8">
-      <p className="text-xs uppercase tracking-[0.25em] text-[#8b7b7e]">
-        Celebration
-      </p>
+    <motion.article
+      initial={{
+        opacity: 0,
+        y: 22,
+      }}
+      whileInView={{
+        opacity: 1,
+        y: 0,
+      }}
+      viewport={{
+        once: true,
+        amount: 0.22,
+      }}
+      transition={{
+        duration: 0.75,
+        delay: index * 0.06,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+      className="group relative"
+    >
+      <div className="grid gap-4 border-t border-[#35151c]/10 py-7 sm:grid-cols-[54px_minmax(0,1fr)_auto] sm:gap-6 sm:py-9">
+        {/* Index */}
+        <div className="flex items-start gap-3 sm:block">
+          <span
+            className={`text-[10px] tracking-[0.2em] ${accent.number}`}
+          >
+            {String(index + 1).padStart(2, "0")}
+          </span>
 
-      <h3 className="mt-3 text-2xl font-semibold sm:text-3xl">
-        {event.name}
-      </h3>
+          <div
+            className={`mt-[7px] h-px w-8 sm:mt-3 sm:w-6 ${accent.line}`}
+          />
+        </div>
 
-      <div className="mt-6 space-y-2 text-sm text-[#6f6265]">
-        {event.date && <p>{event.date}</p>}
+        {/* Main */}
+        <div>
+          <h3 className="font-display max-w-3xl text-3xl leading-[1.02] tracking-[-0.04em] sm:text-4xl lg:text-[2.8rem]">
+            {event.name}
+          </h3>
 
-        {event.time && <p>{event.time}</p>}
+          {/* Core details */}
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-[#625558]">
+            {event.date && (
+              <div className="flex items-center gap-1.5">
+                <CalendarDays
+                  size={13}
+                  strokeWidth={1.4}
+                />
 
-        <div className="flex items-start gap-2">
-          <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-
-          <div>
-            {event.venue && (
-              <p className="font-medium text-[#321f24]">
-                {event.venue}
-              </p>
+                <span>{event.date}</span>
+              </div>
             )}
 
-            <p>{event.location}</p>
+            {event.time && (
+              <div className="flex items-center gap-1.5">
+                <Clock3
+                  size={13}
+                  strokeWidth={1.4}
+                />
 
-            {event.address && (
-              <p className="mt-1">{event.address}</p>
+                <span>{event.time}</span>
+              </div>
             )}
+
+            <div className="flex items-center gap-1.5">
+              <MapPin
+                size={13}
+                strokeWidth={1.4}
+              />
+
+              <span>
+                {event.venue
+                  ? `${event.venue}, ${event.location}`
+                  : event.location}
+              </span>
+            </div>
           </div>
+
+          {event.description && (
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-[#76686a]">
+              {event.description}
+            </p>
+          )}
+
+          {(event.dressCode ||
+            event.instructions ||
+            event.address) && (
+            <div className="mt-5 grid gap-3 text-[11px] sm:grid-cols-2">
+              {event.dressCode && (
+                <div>
+                  <p className="uppercase tracking-[0.17em] text-[#a18f8c]">
+                    Dress Code
+                  </p>
+
+                  <p className="mt-1.5 text-[#4f4346]">
+                    {event.dressCode}
+                  </p>
+                </div>
+              )}
+
+              {event.address && (
+                <div>
+                  <p className="uppercase tracking-[0.17em] text-[#a18f8c]">
+                    Venue
+                  </p>
+
+                  <p className="mt-1.5 max-w-md leading-5 text-[#4f4346]">
+                    {event.address}
+                  </p>
+                </div>
+              )}
+
+              {event.instructions && (
+                <div className="sm:col-span-2">
+                  <p className="uppercase tracking-[0.17em] text-[#a18f8c]">
+                    Good to know
+                  </p>
+
+                  <p className="mt-1.5 max-w-2xl leading-5 text-[#76686a]">
+                    {event.instructions}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
+
+        {/* CTA */}
+        {event.mapsUrl && (
+          <div className="sm:pt-1">
+            <a
+              href={event.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-[#35151c]/15 px-4 text-[10px] uppercase tracking-[0.12em] transition-all duration-300 hover:border-[#35151c] hover:bg-[#35151c] hover:text-white"
+            >
+              <Navigation
+                size={13}
+                strokeWidth={1.5}
+              />
+
+              Directions
+            </a>
+          </div>
+        )}
       </div>
-
-      {event.description && (
-        <p className="mt-6 leading-7 text-[#6f6265]">
-          {event.description}
-        </p>
-      )}
-
-      {event.dressCode && (
-        <div className="mt-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#8b7b7e]">
-            Dress Code
-          </p>
-
-          <p className="mt-1 text-sm">
-            {event.dressCode}
-          </p>
-        </div>
-      )}
-
-      {event.instructions && (
-        <div className="mt-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#8b7b7e]">
-            Good to know
-          </p>
-
-          <p className="mt-1 text-sm leading-6 text-[#6f6265]">
-            {event.instructions}
-          </p>
-        </div>
-      )}
-
-      {event.mapsUrl && (
-        <a
-          href={event.mapsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-7 inline-flex items-center gap-2 rounded-full border border-[#321f24] px-5 py-2.5 text-sm font-medium transition hover:bg-[#321f24] hover:text-white"
-        >
-          <Navigation className="h-4 w-4" />
-          Get Directions
-        </a>
-      )}
-    </article>
+    </motion.article>
   );
 }

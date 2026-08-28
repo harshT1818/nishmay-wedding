@@ -1,44 +1,42 @@
 "use client";
 
 import { useState } from "react";
-
-type RSVPStatus = "yes" | "no" | null;
+import { Check, Heart, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 type RSVPProps = {
   token: string;
 };
 
+type RSVPStatus = "attending" | "not_attending" | null;
+
 export default function RSVP({
   token,
 }: RSVPProps) {
-  const [status, setStatus] =
-    useState<RSVPStatus>(null);
+  const [status, setStatus] = useState<RSVPStatus>(null);
+  const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [loading, setLoading] =
-    useState(false);
-
-  const [error, setError] =
-    useState<string | null>(null);
-
-  async function handleRSVP(
+  async function submit(
     nextStatus: Exclude<RSVPStatus, null>,
   ) {
     setLoading(true);
     setError(null);
+    setSaved(false);
 
     try {
       const response = await fetch(
         `/api/rsvp/${encodeURIComponent(token)}`,
         {
           method: "POST",
+
           headers: {
             "Content-Type": "application/json",
           },
+
           body: JSON.stringify({
-            status:
-              nextStatus === "yes"
-                ? "attending"
-                : "not_attending",
+            status: nextStatus,
           }),
         },
       );
@@ -52,10 +50,11 @@ export default function RSVP({
       }
 
       setStatus(nextStatus);
-    } catch (error) {
+      setSaved(true);
+    } catch (err) {
       setError(
-        error instanceof Error
-          ? error.message
+        err instanceof Error
+          ? err.message
           : "Unable to save RSVP.",
       );
     } finally {
@@ -66,74 +65,159 @@ export default function RSVP({
   return (
     <section
       id="rsvp"
-      className="px-6 py-28"
+      className="relative overflow-hidden px-6 py-20 sm:py-28"
     >
-      <div className="mx-auto max-w-xl text-center">
-        <p className="text-xs uppercase tracking-[0.3em] text-[#8b646d]">
-          RSVP
-        </p>
+      <div className="pointer-events-none absolute right-[-120px] top-10 h-72 w-72 rounded-full border border-[#b99155]/10" />
 
-        <h2 className="mt-4 text-3xl font-semibold sm:text-4xl">
-          Will you celebrate with us?
-        </h2>
+      <div className="mx-auto max-w-3xl">
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 24,
+          }}
+          whileInView={{
+            opacity: 1,
+            y: 0,
+          }}
+          viewport={{
+            once: true,
+          }}
+          transition={{
+            duration: 0.8,
+          }}
+          className="text-center"
+        >
+          <Heart
+            size={20}
+            strokeWidth={1.3}
+            className="mx-auto text-[#b45e43]"
+          />
 
-        <p className="mx-auto mt-5 max-w-md leading-7 text-[#6f6265]">
-          We would love to know if you'll be joining
-          Nishita & Mayur for the celebrations.
-        </p>
+          <p className="mt-6 text-[10px] uppercase tracking-[0.4em] text-[#b45e43]">
+            RSVP
+          </p>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          <h2 className="font-display mt-5 text-5xl tracking-[-0.045em] sm:text-7xl">
+            Will you be
+            <br />
+            <span className="font-editorial text-[#8e4438]">
+              celebrating with us?
+            </span>
+          </h2>
+
+          <p className="mx-auto mt-7 max-w-lg text-sm leading-7 text-[#76686a] sm:text-base">
+            A simple yes or no is all we need.
+          </p>
+        </motion.div>
+
+        <div className="mt-12 grid gap-4 sm:grid-cols-2">
           <button
             type="button"
             disabled={loading}
-            onClick={() => handleRSVP("yes")}
-            className={`rounded-2xl border px-6 py-5 font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
-              status === "yes"
-                ? "border-[#321f24] bg-[#321f24] text-white"
-                : "border-[#d8cbc5] bg-white hover:border-[#321f24]"
+            onClick={() => submit("attending")}
+            className={`group relative overflow-hidden rounded-[24px] border p-7 text-left transition-all duration-500 ${
+              status === "attending"
+                ? "border-[#35151c] bg-[#35151c] text-white"
+                : "border-[#35151c]/15 bg-[#fbf7f0] hover:border-[#35151c]/50"
             }`}
           >
-            Yes ❤️
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[9px] uppercase tracking-[0.3em] opacity-60">
+                  Count me in
+                </p>
+
+                <p className="font-display mt-3 text-3xl">
+                  Yes, absolutely
+                </p>
+              </div>
+
+              <div
+                className={`flex h-11 w-11 items-center justify-center rounded-full border ${
+                  status === "attending"
+                    ? "border-white/20 bg-white/10"
+                    : "border-[#35151c]/15"
+                }`}
+              >
+                {status === "attending" ? (
+                  <Check size={18} />
+                ) : (
+                  <Heart
+                    size={17}
+                    strokeWidth={1.5}
+                  />
+                )}
+              </div>
+            </div>
           </button>
 
           <button
             type="button"
             disabled={loading}
-            onClick={() => handleRSVP("no")}
-            className={`rounded-2xl border px-6 py-5 font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
-              status === "no"
-                ? "border-[#321f24] bg-[#321f24] text-white"
-                : "border-[#d8cbc5] bg-white hover:border-[#321f24]"
+            onClick={() =>
+              submit("not_attending")
+            }
+            className={`group rounded-[24px] border p-7 text-left transition-all duration-500 ${
+              status === "not_attending"
+                ? "border-[#35151c] bg-[#35151c] text-white"
+                : "border-[#35151c]/15 bg-[#fbf7f0] hover:border-[#35151c]/50"
             }`}
           >
-            Unfortunately, I can't make it
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[9px] uppercase tracking-[0.3em] opacity-60">
+                  With love
+                </p>
+
+                <p className="font-display mt-3 text-3xl">
+                  Can&apos;t make it
+                </p>
+              </div>
+
+              {status === "not_attending" && (
+                <div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10">
+                  <Check size={18} />
+                </div>
+              )}
+            </div>
           </button>
         </div>
 
         {loading && (
-          <p className="mt-6 text-sm text-[#74666a]">
+          <div className="mt-7 flex items-center justify-center gap-2 text-sm text-[#76686a]">
+            <Loader2
+              size={16}
+              className="animate-spin"
+            />
+
             Saving your response...
-          </p>
+          </div>
+        )}
+
+        {saved && (
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 10,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            className="mx-auto mt-8 max-w-xl rounded-2xl border border-[#b99155]/20 bg-[#efe4d4] px-6 py-5 text-center"
+          >
+            <p className="font-editorial text-lg text-[#8e4438]">
+              {status === "attending"
+                ? "That just made us smile. See you there."
+                : "We'll miss you, but thank you for letting us know."}
+            </p>
+          </motion.div>
         )}
 
         {error && (
-          <p
-            role="alert"
-            className="mt-6 text-sm text-red-700"
-          >
+          <p className="mt-6 text-center text-sm text-red-700">
             {error}
           </p>
-        )}
-
-        {status && !loading && (
-          <div
-            aria-live="polite"
-            className="mt-8 rounded-2xl bg-[#efe5da] p-5 text-sm leading-6"
-          >
-            {status === "yes"
-              ? "We'd be delighted to celebrate with you. ❤️"
-              : "We'll miss you, but thank you for letting us know."}
-          </div>
         )}
       </div>
     </section>

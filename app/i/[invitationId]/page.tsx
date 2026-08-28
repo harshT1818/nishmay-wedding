@@ -11,6 +11,18 @@ import Closing from "@/components/invitation/Closing";
 
 import { getInvitationByToken } from "@/lib/invitations/getInvitationByToken";
 
+import FloatingControls from "@/components/invitation/FloatingControls";
+// import WeddingJourney from "@/components/invitation/WeddingJourney";
+import SectionDivider from "@/components/invitation/SectionDivider";
+import CoupleStory from "@/components/invitation/CoupleStory";
+import {
+  WeddingExperienceProvider,
+} from "@/components/invitation/WeddingExperience";
+import GujaratiInterlude from "@/components/invitation/GujaratiInterlude";
+import PhotoStrip from "@/components/invitation/PhotoStrip";
+import EntranceCurtain from "@/components/invitation/EntranceCurtain";
+import FestiveAtmosphere from "@/components/invitation/FestiveAtmosphere";
+
 type InvitationPageProps = {
   params: Promise<{
     invitationId: string;
@@ -28,48 +40,71 @@ export default async function InvitationPage({
     notFound();
   }
 
-  return (
-    <main className="min-h-screen bg-[#faf7f2] text-[#321f24]">
+return (
+  <WeddingExperienceProvider>
+    <EntranceCurtain />
+    <FestiveAtmosphere />
+    <main className="min-h-screen overflow-hidden bg-[#f6f0e6] text-[#261b1d]">
       <Opening />
 
-      <Greeting guestName={invitation.guestName} />
+      <Greeting
+        guestName={invitation.guestName}
+      />
+
+      <SectionDivider />
 
       <DateReveal />
 
       <WeddingHero />
+        <PhotoStrip />
 
+        <GujaratiInterlude />
+
+      <CoupleStory />
       <Countdown />
 
-      <section className="px-6 py-24">
-        <div className="mx-auto max-w-3xl">
-          <div className="mb-10 text-center">
-            <p className="text-xs uppercase tracking-[0.3em] text-[#8b646d]">
-              You're invited to
-            </p>
+      {/* <WeddingJourney /> */}
+            <section
+            id="events"
+            className="px-6 pt-18 pb-6 sm:pt-24 sm:pb-8"
+            >
+            <div className="mx-auto max-w-6xl">
+                <div className="mb-8 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+                    <div>
+                        <p className="text-[9px] uppercase tracking-[0.38em] text-[#b45e43]">
+                        Come celebrate with us
+                        </p>
 
-            <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">
-              Your Celebrations
-            </h2>
+                        <h2 className="font-display mt-4 text-5xl tracking-[-0.05em] sm:text-6xl">
+                        Please join us.
+                        </h2>
+                    </div>
 
-            <p className="mx-auto mt-4 max-w-lg leading-7 text-[#6f6265]">
-              These are the celebrations included in your invitation.
-            </p>
-          </div>
+                    <p className="max-w-sm text-sm leading-6 text-[#76686a]">
+                        We would be delighted to celebrate these moments together with you.
+                    </p>
+                    </div>
 
-          <div className="space-y-5">
-            {invitation.events.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
+                <div className="border-b border-[#35151c]/10">
+                {invitation.events.map(
+                    (event, index) => (
+                    <EventCard
+                        key={event.id}
+                        event={event}
+                        index={index}
+                    />
+                    ),
+                )}
+                </div>
+            </div>
+            </section>
 
-      <RSVP token={invitationId} />
+          <RSVP token={invitationId} />
 
       <Closing />
+
+      <FloatingControls />
     </main>
-  );
+  </WeddingExperienceProvider>
+);
 }
