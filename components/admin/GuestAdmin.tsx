@@ -63,6 +63,9 @@ export default function GuestAdmin({
   const [error, setError] =
     useState<string | null>(null);
 
+  const [copiedGuestId, setCopiedGuestId] =
+  useState<string | null>(null);
+
   const [editingGuestId, setEditingGuestId] =
     useState<string | null>(null);
 
@@ -355,19 +358,43 @@ export default function GuestAdmin({
   }
 
   async function copyInvitation(
+    guestId: string,
     relativeUrl: string,
   ) {
-    await navigator.clipboard.writeText(
-      absoluteInvitationUrl(
-        relativeUrl,
-      ),
-    );
+    try {
+      await navigator.clipboard.writeText(
+        absoluteInvitationUrl(
+          relativeUrl,
+        ),
+      );
+
+      setCopiedGuestId(
+        guestId,
+      );
+
+      window.setTimeout(() => {
+        setCopiedGuestId(
+          (current) =>
+            current === guestId
+              ? null
+              : current,
+        );
+      }, 1800);
+    } catch {
+      setError(
+        "Unable to copy invitation link.",
+      );
+    }
   }
 
   function openWhatsApp(
     guest: ManagedGuest,
   ) {
-    if (!guest.invitation?.url) {
+    if (
+      !guest.invitation?.url ||
+      guest.invitation.status !==
+        "active"
+    ) {
       return;
     }
 
@@ -377,8 +404,11 @@ export default function GuestAdmin({
       );
 
     const message =
-      `You're invited to celebrate Nishita & Mayur 💛\n\n` +
+      `Hi ${guest.display_name}! 💛\n\n` +
+      `We'd love for you to be a part of Nishita & Mayur's wedding celebrations.\n\n` +
+      `We've made a little invitation for you ✨\n` +
       `${invitationUrl}\n\n` +
+      `15 February 2027\n` +
       `#NishMayKiShaadi`;
 
     window.open(
@@ -710,67 +740,174 @@ export default function GuestAdmin({
                         )}
                       </div>
 
-                      <div className="mt-6 flex flex-wrap gap-2">
-                        {invitation.url && (
-                          <>
-                            <a
-                              href={
-                                invitation.url
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="rounded-xl border border-[#d8cbc5] px-4 py-2 text-sm"
-                            >
-                              Open
-                            </a>
+                        <div className="mt-6 border-t border-[#eee5df] pt-5">
+                          {/* Invitation sharing */}
+                          {invitation.url &&
+                            invitation.status ===
+                              "active" && (
+                              <div>
+                                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#8b7b7e]">
+                                  Send invitation
+                                </p>
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                copyInvitation(
-                                  invitation.url!,
-                                )
-                              }
-                              className="rounded-xl border border-[#d8cbc5] px-4 py-2 text-sm"
-                            >
-                              Copy Link
-                            </button>
+                                <p className="mt-1 text-xs text-[#9b8c8f]">
+                                  Private invitation for{" "}
+                                  {guest.display_name}
+                                </p>
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openWhatsApp(
-                                  guest,
-                                )
-                              }
-                              className="rounded-xl border border-[#d8cbc5] px-4 py-2 text-sm"
-                            >
-                              WhatsApp
-                            </button>
-                          </>
-                        )}
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      openWhatsApp(
+                                        guest,
+                                      )
+                                    }
+                                    className="
+                                      rounded-xl
+                                      bg-[#321f24]
+                                      px-4
+                                      py-2.5
+                                      text-sm
+                                      font-medium
+                                      text-white
+                                      transition
+                                      hover:bg-[#4a2d35]
+                                      active:scale-[0.98]
+                                    "
+                                  >
+                                    Send on WhatsApp
+                                  </button>
 
-                        {!invitation.url && (
-                          <span className="rounded-xl bg-yellow-50 px-4 py-2 text-xs text-yellow-800">
-                            Legacy invitation:
-                            link unavailable
-                          </span>
-                        )}
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      copyInvitation(
+                                        guest.id,
+                                        invitation.url!,
+                                      )
+                                    }
+                                    className="
+                                      rounded-xl
+                                      border
+                                      border-[#d8cbc5]
+                                      px-4
+                                      py-2.5
+                                      text-sm
+                                      transition
+                                      hover:bg-[#f8f3ee]
+                                    "
+                                  >
+                                    {copiedGuestId ===
+                                    guest.id
+                                      ? "Copied ✓"
+                                      : "Copy Link"}
+                                  </button>
 
-                        {!editing ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              startEditing(
-                                guest,
-                              )
-                            }
-                            className="rounded-xl border border-[#321f24] px-4 py-2 text-sm"
-                          >
-                            Edit Events
-                          </button>
-                        ) : (
-                          <>
+                                  <a
+                                    href={
+                                      invitation.url
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="
+                                      rounded-xl
+                                      border
+                                      border-[#d8cbc5]
+                                      px-4
+                                      py-2.5
+                                      text-sm
+                                      transition
+                                      hover:bg-[#f8f3ee]
+                                    "
+                                  >
+                                    Preview
+                                  </a>
+                                </div>
+                              </div>
+                            )}
+
+                          {/* Inactive invitation warning */}
+                          {invitation.url &&
+                            invitation.status !==
+                              "active" && (
+                              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                                <p className="text-sm font-medium text-amber-900">
+                                  Invitation inactive
+                                </p>
+
+                                <p className="mt-1 text-xs leading-5 text-amber-700">
+                                  Reactivate this
+                                  invitation before
+                                  sharing it with the
+                                  guest.
+                                </p>
+                              </div>
+                            )}
+
+                          {/* Legacy invitation */}
+                          {!invitation.url && (
+                            <div className="rounded-xl bg-yellow-50 px-4 py-3">
+                              <p className="text-xs text-yellow-800">
+                                Legacy invitation:
+                                secure link unavailable
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Administration */}
+                          <div className="mt-5 flex flex-wrap gap-2 border-t border-[#eee5df] pt-4">
+                            {!editing ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  startEditing(
+                                    guest,
+                                  )
+                                }
+                                className="rounded-xl border border-[#d8cbc5] px-4 py-2 text-sm transition hover:bg-[#f8f3ee]"
+                              >
+                                Edit Events
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  disabled={
+                                    savingGuestId ===
+                                    guest.id
+                                  }
+                                  onClick={() =>
+                                    saveEvents(
+                                      guest,
+                                    )
+                                  }
+                                  className="rounded-xl bg-[#321f24] px-4 py-2 text-sm text-white disabled:opacity-60"
+                                >
+                                  {savingGuestId ===
+                                  guest.id
+                                    ? "Saving..."
+                                    : "Save Events"}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  disabled={
+                                    savingGuestId ===
+                                    guest.id
+                                  }
+                                  onClick={() =>
+                                    setEditingGuestId(
+                                      null,
+                                    )
+                                  }
+                                  className="rounded-xl border border-[#d8cbc5] px-4 py-2 text-sm"
+                                >
+                                  Cancel
+                                </button>
+                              </>
+                            )}
+
                             <button
                               type="button"
                               disabled={
@@ -778,48 +915,27 @@ export default function GuestAdmin({
                                 guest.id
                               }
                               onClick={() =>
-                                saveEvents(
+                                toggleStatus(
                                   guest,
                                 )
                               }
-                              className="rounded-xl bg-[#321f24] px-4 py-2 text-sm text-white"
-                            >
-                              Save Events
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setEditingGuestId(
-                                  null,
-                                )
+                              className={
+                                invitation.status ===
+                                "active"
+                                  ? "rounded-xl border border-red-200 px-4 py-2 text-sm text-red-700 transition hover:bg-red-50 disabled:opacity-60"
+                                  : "rounded-xl border border-green-200 px-4 py-2 text-sm text-green-700 transition hover:bg-green-50 disabled:opacity-60"
                               }
-                              className="rounded-xl border border-[#d8cbc5] px-4 py-2 text-sm"
                             >
-                              Cancel
+                              {savingGuestId ===
+                              guest.id
+                                ? "Updating..."
+                                : invitation.status ===
+                                    "active"
+                                  ? "Deactivate"
+                                  : "Reactivate"}
                             </button>
-                          </>
-                        )}
-
-                        <button
-                          type="button"
-                          disabled={
-                            savingGuestId ===
-                            guest.id
-                          }
-                          onClick={() =>
-                            toggleStatus(
-                              guest,
-                            )
-                          }
-                          className="rounded-xl border border-red-200 px-4 py-2 text-sm text-red-700"
-                        >
-                          {invitation.status ===
-                          "active"
-                            ? "Deactivate"
-                            : "Reactivate"}
-                        </button>
-                      </div>
+                          </div>
+                        </div>
                     </>
                   )}
                 </article>
