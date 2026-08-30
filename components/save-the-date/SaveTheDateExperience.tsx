@@ -30,7 +30,11 @@ import {
 /* -------------------------------------------------------------------------- */
 
 const SHARE_TEXT =
-  "Save the Date ✨\n\nNishita Thaker weds Mayur Gami\n14 & 15 February 2027\nMumbai\n\n#NishMayKiShaadi";
+  "\u2728 Save the Date \u2728\n\n" +
+  "Nishita Thaker \u2764\uFE0F Mayur Gami\n\n" +
+  "\uD83D\uDCC5 14 & 15 February 2027\n" +
+  "\uD83D\uDCCD Mumbai\n\n" +
+  "#NishMayKiShaadi \u2764\uFE0F";
 
 const PETAL_COLORS = [
   "#f5a623",
@@ -1462,11 +1466,72 @@ export default function SaveTheDateExperience() {
   /*                                   URL                                    */
   /* ------------------------------------------------------------------------ */
 
-  useEffect(() => {
-    setPageUrl(
-      window.location.href,
+useEffect(() => {
+  const audio = audioRef.current;
+
+  if (!audio) {
+    return;
+  }
+
+  audio.volume = 0.42;
+
+  const startMusic = async () => {
+    if (!audio.paused) {
+      return;
+    }
+
+    try {
+      await audio.play();
+      setMusicPlaying(true);
+    } catch {
+      setMusicPlaying(false);
+    }
+  };
+
+  // Try immediately.
+  void startMusic();
+
+  // Browsers blocking autoplay will allow it after
+  // the guest's first interaction with the invitation.
+  const handleFirstInteraction = () => {
+    void startMusic();
+  };
+
+  document.addEventListener(
+    "pointerdown",
+    handleFirstInteraction,
+    { once: true },
+  );
+
+  document.addEventListener(
+    "touchstart",
+    handleFirstInteraction,
+    { once: true, passive: true },
+  );
+
+  document.addEventListener(
+    "keydown",
+    handleFirstInteraction,
+    { once: true },
+  );
+
+  return () => {
+    document.removeEventListener(
+      "pointerdown",
+      handleFirstInteraction,
     );
-  }, []);
+
+    document.removeEventListener(
+      "touchstart",
+      handleFirstInteraction,
+    );
+
+    document.removeEventListener(
+      "keydown",
+      handleFirstInteraction,
+    );
+  };
+}, []);
 
   /* ------------------------------------------------------------------------ */
   /*                                  MUSIC                                   */
