@@ -23,6 +23,15 @@ import {
 const SHARE_TEXT =
   "Save the Date ✨\n\nNishita Thaker weds Mayur Gami\n14 & 15 February 2027\nMumbai\n\n#NishMayKiShaadi";
 
+const CELEBRATION_COLORS = [
+  "#f2aa2a",
+  "#e58a24",
+  "#d95e44",
+  "#c9374b",
+  "#b92f3d",
+  "#f3c661",
+];
+
 function RangoliFlower({
   className = "",
 }: {
@@ -75,9 +84,7 @@ function MarigoldString({
     <motion.div
       aria-hidden="true"
       className="pointer-events-none absolute top-0 flex flex-col items-center"
-      style={{
-        left,
-      }}
+      style={{ left }}
       initial={{
         y: -120,
         opacity: 0,
@@ -87,7 +94,7 @@ function MarigoldString({
         opacity: 1,
       }}
       transition={{
-        duration: 1.25,
+        duration: 1.15,
         delay,
         ease: [0.22, 1, 0.36, 1],
       }}
@@ -161,25 +168,43 @@ function FallingPetal({
   delay,
   duration,
   color,
+  size = 8,
+  drift = 18,
 }: {
   left: string;
   delay: number;
   duration: number;
   color: string;
+  size?: number;
+  drift?: number;
 }) {
   return (
     <motion.span
       aria-hidden="true"
-      className="pointer-events-none absolute -top-8 h-2.5 w-1.5 rounded-full"
+      className="pointer-events-none absolute -top-10 rounded-[80%_20%_80%_20%]"
       style={{
         left,
+        width: size,
+        height: size * 1.6,
         background: color,
+        boxShadow:
+          "0 3px 9px rgba(89, 45, 36, 0.08)",
       }}
       animate={{
-        y: ["0vh", "110vh"],
-        x: [0, 18, -9, 12],
-        rotate: [0, 120, 250, 390],
-        opacity: [0, 0.65, 0.5, 0],
+        y: ["0vh", "112vh"],
+        x: [
+          0,
+          drift,
+          -drift * 0.55,
+          drift * 0.35,
+        ],
+        rotate: [
+          0,
+          110,
+          260,
+          430,
+        ],
+        opacity: [0, 0.9, 0.85, 0],
       }}
       transition={{
         delay,
@@ -191,21 +216,262 @@ function FallingPetal({
   );
 }
 
+function FlowerConfetti({
+  index,
+}: {
+  index: number;
+}) {
+  const left =
+    `${(index * 17 + 7) % 100}%`;
+
+  const delay =
+    1.3 + (index % 8) * 0.09;
+
+  const duration =
+    5.2 + (index % 6) * 0.5;
+
+  const color =
+    CELEBRATION_COLORS[
+      index %
+        CELEBRATION_COLORS.length
+    ];
+
+  const size =
+    7 + (index % 5) * 2;
+
+  const drift =
+    20 + (index % 7) * 7;
+
+  return (
+    <motion.span
+      aria-hidden="true"
+      className="pointer-events-none absolute -top-12 rounded-[90%_15%_90%_15%]"
+      style={{
+        left,
+        width: size,
+        height: size * 1.55,
+        background:
+          color,
+        boxShadow:
+          "0 4px 10px rgba(92,48,38,0.08)",
+      }}
+      initial={{
+        y: "-8vh",
+        opacity: 0,
+        rotate: 0,
+      }}
+      animate={{
+        y: "112vh",
+        x: [
+          0,
+          drift,
+          -drift * 0.65,
+          drift * 0.25,
+        ],
+        rotate: [
+          0,
+          130,
+          280,
+          470,
+        ],
+        opacity: [
+          0,
+          1,
+          0.95,
+          0.85,
+          0,
+        ],
+      }}
+      transition={{
+        delay,
+        duration,
+        ease: "linear",
+      }}
+    />
+  );
+}
+
+function CelebrationBurst({
+  reduceMotion,
+}: {
+  reduceMotion: boolean | null;
+}) {
+  if (reduceMotion) {
+    return null;
+  }
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 z-20 overflow-hidden"
+    >
+      {Array.from({
+        length: 42,
+      }).map((_, index) => (
+        <FlowerConfetti
+          key={index}
+          index={index}
+        />
+      ))}
+    </div>
+  );
+}
+
+function AmbientPetalShower({
+  reduceMotion,
+}: {
+  reduceMotion: boolean | null;
+}) {
+  if (reduceMotion) {
+    return null;
+  }
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 z-[5] overflow-hidden"
+    >
+      {Array.from({
+        length: 24,
+      }).map((_, index) => (
+        <FallingPetal
+          key={index}
+          left={`${(index * 23 + 11) % 100}%`}
+          delay={
+            4.5 +
+            (index % 10) * 0.9
+          }
+          duration={
+            10 +
+            (index % 7) * 1.4
+          }
+          color={
+            CELEBRATION_COLORS[
+              index %
+                CELEBRATION_COLORS.length
+            ]
+          }
+          size={
+            6 +
+            (index % 4) * 2
+          }
+          drift={
+            14 +
+            (index % 6) * 6
+          }
+        />
+      ))}
+    </div>
+  );
+}
+
+function DriftingFlower({
+  left,
+  top,
+  delay,
+  size,
+  direction = 1,
+}: {
+  left: string;
+  top: string;
+  delay: number;
+  size: number;
+  direction?: number;
+}) {
+  return (
+    <motion.span
+      aria-hidden="true"
+      className="pointer-events-none absolute"
+      style={{
+        left,
+        top,
+        fontSize: size,
+      }}
+      initial={{
+        opacity: 0,
+        scale: 0.6,
+      }}
+      animate={{
+        opacity: [
+          0.15,
+          0.8,
+          0.4,
+        ],
+        y: [
+          0,
+          -14,
+          0,
+        ],
+        x: [
+          0,
+          7 * direction,
+          0,
+        ],
+        rotate: [
+          0,
+          12 * direction,
+          0,
+        ],
+        scale: [
+          0.8,
+          1,
+          0.8,
+        ],
+      }}
+      transition={{
+        delay,
+        duration: 4.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+    >
+      ✿
+    </motion.span>
+  );
+}
+
 function WedsMoment({
   reduceMotion,
 }: {
   reduceMotion: boolean | null;
 }) {
   const petals = [
-    { rotate: -10, color: "#e89e2a" },
-    { rotate: 34, color: "#d65544" },
-    { rotate: 76, color: "#e89e2a" },
-    { rotate: 120, color: "#c9374b" },
-    { rotate: 164, color: "#e89e2a" },
-    { rotate: 206, color: "#d65544" },
-    { rotate: 250, color: "#e89e2a" },
-    { rotate: 296, color: "#c9374b" },
-    { rotate: 336, color: "#e89e2a" },
+    {
+      rotate: -10,
+      color: "#e89e2a",
+    },
+    {
+      rotate: 34,
+      color: "#d65544",
+    },
+    {
+      rotate: 76,
+      color: "#e89e2a",
+    },
+    {
+      rotate: 120,
+      color: "#c9374b",
+    },
+    {
+      rotate: 164,
+      color: "#e89e2a",
+    },
+    {
+      rotate: 206,
+      color: "#d65544",
+    },
+    {
+      rotate: 250,
+      color: "#e89e2a",
+    },
+    {
+      rotate: 296,
+      color: "#c9374b",
+    },
+    {
+      rotate: 336,
+      color: "#e89e2a",
+    },
   ];
 
   return (
@@ -264,13 +530,16 @@ function WedsMoment({
               scale: 1,
             }}
             transition={{
-              delay: 0.95 + index * 0.04,
+              delay:
+                0.95 +
+                index * 0.04,
               type: "spring",
               stiffness: 140,
             }}
             className="absolute left-1/2 top-1/2 h-[15px] w-[7px] origin-[50%_40px] rounded-[90%_10%_90%_10%]"
             style={{
-              background: petal.color,
+              background:
+                petal.color,
               transform: `translate(-50%, -50%) rotate(${petal.rotate}deg) translateY(-40px)`,
               opacity: 0.82,
             }}
@@ -283,7 +552,11 @@ function WedsMoment({
           reduceMotion
             ? undefined
             : {
-                scale: [1, 1.05, 1],
+                scale: [
+                  1,
+                  1.05,
+                  1,
+                ],
               }
         }
         transition={{
@@ -298,6 +571,97 @@ function WedsMoment({
         </span>
       </motion.div>
     </motion.div>
+  );
+}
+
+function DateSparkBurst({
+  reduceMotion,
+}: {
+  reduceMotion: boolean | null;
+}) {
+  if (reduceMotion) {
+    return null;
+  }
+
+  const burst = [
+    {
+      x: -125,
+      y: -34,
+      delay: 1.65,
+    },
+    {
+      x: 128,
+      y: -28,
+      delay: 1.75,
+    },
+    {
+      x: -102,
+      y: 44,
+      delay: 1.8,
+    },
+    {
+      x: 103,
+      y: 48,
+      delay: 1.9,
+    },
+    {
+      x: -145,
+      y: 12,
+      delay: 2,
+    },
+    {
+      x: 145,
+      y: 10,
+      delay: 2.05,
+    },
+  ];
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute left-1/2 top-1/2"
+    >
+      {burst.map(
+        (item, index) => (
+          <motion.span
+            key={index}
+            className="absolute text-[#e3a02f]"
+            initial={{
+              x: 0,
+              y: 0,
+              opacity: 0,
+              scale: 0.2,
+            }}
+            animate={{
+              x: item.x,
+              y: item.y,
+              opacity: [
+                0,
+                1,
+                0,
+              ],
+              scale: [
+                0.2,
+                1.25,
+                0.4,
+              ],
+              rotate:
+                index % 2 === 0
+                  ? 100
+                  : -100,
+            }}
+            transition={{
+              delay:
+                item.delay,
+              duration: 1.4,
+              ease: "easeOut",
+            }}
+          >
+            ✦
+          </motion.span>
+        ),
+      )}
+    </div>
   );
 }
 
@@ -325,27 +689,34 @@ function HashtagMoment({
         duration: 0.75,
         ease: [0.22, 1, 0.36, 1],
       }}
-      className="relative mx-auto mt-6 max-w-xl"
+      className="relative mx-auto mt-5 max-w-xl"
     >
       <FloatingSpark
-        left="5%"
-        top="28%"
+        left="3%"
+        top="23%"
         delay={0}
         size="text-lg"
       />
 
       <FloatingSpark
-        left="91%"
-        top="8%"
+        left="92%"
+        top="6%"
         delay={0.8}
         size="text-base"
       />
 
       <FloatingSpark
-        left="84%"
-        top="78%"
+        left="85%"
+        top="80%"
         delay={1.6}
         size="text-xs"
+      />
+
+      <FloatingSpark
+        left="12%"
+        top="78%"
+        delay={1.2}
+        size="text-sm"
       />
 
       <motion.div
@@ -353,7 +724,11 @@ function HashtagMoment({
           reduceMotion
             ? undefined
             : {
-                scale: [1, 1.015, 1],
+                scale: [
+                  1,
+                  1.015,
+                  1,
+                ],
               }
         }
         transition={{
@@ -369,7 +744,10 @@ function HashtagMoment({
             reduceMotion
               ? undefined
               : {
-                  x: ["-130%", "180%"],
+                  x: [
+                    "-130%",
+                    "180%",
+                  ],
                 }
           }
           transition={{
@@ -385,7 +763,7 @@ function HashtagMoment({
           Celebrate with us
         </p>
 
-        <p className="relative mt-1 break-words text-[clamp(1.35rem,6vw,2.25rem)] font-black tracking-[-0.035em] text-white drop-shadow-sm">
+        <p className="relative mt-1 break-words text-[clamp(1.4rem,6vw,2.3rem)] font-black tracking-[-0.035em] text-white drop-shadow-sm">
           #NishMayKiShaadi
         </p>
       </motion.div>
@@ -486,72 +864,112 @@ export default function SaveTheDateExperience() {
           style={{
             backgroundImage:
               "radial-gradient(circle at center, rgba(77,31,34,0.22) 0.6px, transparent 0.7px)",
-            backgroundSize: "9px 9px",
+            backgroundSize:
+              "9px 9px",
           }}
         />
       </div>
 
+      {/* CELEBRATION BURST AFTER ~1.5 SEC */}
+      <CelebrationBurst
+        reduceMotion={
+          reduceMotion
+        }
+      />
+
+      {/* CONTINUOUS PETAL SHOWER */}
+      <AmbientPetalShower
+        reduceMotion={
+          reduceMotion
+        }
+      />
+
       {!reduceMotion && (
         <>
           <MarigoldString
-            left="6%"
+            left="5%"
             delay={0.1}
           />
 
           <MarigoldString
-            left="90%"
+            left="92%"
             delay={0.3}
           />
 
           <FloatingSpark
             left="15%"
-            top="22%"
+            top="20%"
             delay={0.3}
           />
 
           <FloatingSpark
             left="81%"
-            top="17%"
+            top="16%"
             delay={1.1}
           />
 
           <FloatingSpark
             left="88%"
-            top="53%"
+            top="50%"
             delay={1.8}
           />
 
           <FloatingSpark
             left="9%"
-            top="61%"
+            top="59%"
             delay={2.1}
           />
 
-          <FallingPetal
-            left="19%"
-            delay={1}
-            duration={14}
-            color="#e89e2a"
+          <FloatingSpark
+            left="25%"
+            top="69%"
+            delay={1.6}
+            size="text-base"
           />
 
-          <FallingPetal
-            left="72%"
-            delay={4}
-            duration={17}
-            color="#d65349"
+          <FloatingSpark
+            left="71%"
+            top="71%"
+            delay={2.5}
+            size="text-sm"
           />
 
-          <FallingPetal
-            left="84%"
-            delay={8}
-            duration={19}
-            color="#e89e2a"
+          <DriftingFlower
+            left="8%"
+            top="36%"
+            delay={0.7}
+            size={18}
+            direction={1}
+          />
+
+          <DriftingFlower
+            left="87%"
+            top="33%"
+            delay={1.4}
+            size={22}
+            direction={-1}
+          />
+
+          <DriftingFlower
+            left="17%"
+            top="73%"
+            delay={2}
+            size={15}
+            direction={1}
+          />
+
+          <DriftingFlower
+            left="79%"
+            top="68%"
+            delay={1.2}
+            size={17}
+            direction={-1}
           />
         </>
       )}
 
       {/* MAIN HERO */}
-      <section className="relative flex min-h-[92svh] items-center justify-center px-5 py-5 sm:px-8">
+      <section className="relative flex min-h-[90svh] items-center justify-center px-5 py-4 sm:px-8">
         <motion.div
           aria-hidden="true"
           initial={{
@@ -567,7 +985,7 @@ export default function SaveTheDateExperience() {
           transition={{
             duration: 1.4,
           }}
-          className="absolute -left-16 top-[18%] h-44 w-44 text-[#d95e44]/13 sm:h-56 sm:w-56"
+          className="absolute -left-16 top-[17%] h-44 w-44 text-[#d95e44]/13 sm:h-56 sm:w-56"
         >
           <RangoliFlower className="h-full w-full" />
         </motion.div>
@@ -588,13 +1006,13 @@ export default function SaveTheDateExperience() {
             duration: 1.5,
             delay: 0.2,
           }}
-          className="absolute -right-16 bottom-[10%] h-48 w-48 text-[#e79d27]/17 sm:h-60 sm:w-60"
+          className="absolute -right-16 bottom-[9%] h-48 w-48 text-[#e79d27]/17 sm:h-60 sm:w-60"
         >
           <RangoliFlower className="h-full w-full" />
         </motion.div>
 
-        <div className="relative mx-auto w-full max-w-4xl text-center">
-          {/* ONLY SAVE THE DATE */}
+        <div className="relative z-10 mx-auto w-full max-w-4xl text-center">
+          {/* SAVE THE DATE */}
           <motion.div
             initial={{
               opacity: 0,
@@ -636,20 +1054,27 @@ export default function SaveTheDateExperience() {
                 : {
                     opacity: 0,
                     y: 28,
-                    filter: "blur(12px)",
+                    filter:
+                      "blur(12px)",
                   }
             }
             animate={{
               opacity: 1,
               y: 0,
-              filter: "blur(0px)",
+              filter:
+                "blur(0px)",
             }}
             transition={{
               delay: 0.3,
               duration: 1,
-              ease: [0.16, 1, 0.3, 1],
+              ease: [
+                0.16,
+                1,
+                0.3,
+                1,
+              ],
             }}
-            className="mt-6"
+            className="mt-5"
           >
             <h1 className="font-display text-[clamp(3.5rem,14vw,7.6rem)] leading-[0.83] tracking-[-0.065em] text-[#49161f]">
               Nishita
@@ -670,18 +1095,25 @@ export default function SaveTheDateExperience() {
                 : {
                     opacity: 0,
                     y: 28,
-                    filter: "blur(12px)",
+                    filter:
+                      "blur(12px)",
                   }
             }
             animate={{
               opacity: 1,
               y: 0,
-              filter: "blur(0px)",
+              filter:
+                "blur(0px)",
             }}
             transition={{
               delay: 0.8,
               duration: 1,
-              ease: [0.16, 1, 0.3, 1],
+              ease: [
+                0.16,
+                1,
+                0.3,
+                1,
+              ],
             }}
           >
             <h1 className="font-display text-[clamp(3.5rem,14vw,7.6rem)] leading-[0.83] tracking-[-0.065em] text-[#49161f]">
@@ -700,7 +1132,7 @@ export default function SaveTheDateExperience() {
             }}
             transition={{
               duration: 1,
-              delay: 1.4,
+              delay: 1.35,
             }}
             className="mx-auto mt-5 h-px max-w-xs origin-center bg-gradient-to-r from-transparent via-[#d6903c] to-transparent"
           />
@@ -716,11 +1148,17 @@ export default function SaveTheDateExperience() {
               y: 0,
             }}
             transition={{
-              delay: 1.35,
+              delay: 1.3,
               duration: 0.9,
             }}
-            className="mt-5"
+            className="relative mt-5"
           >
+            <DateSparkBurst
+              reduceMotion={
+                reduceMotion
+              }
+            />
+
             <motion.p
               initial={{
                 opacity: 0,
@@ -731,10 +1169,10 @@ export default function SaveTheDateExperience() {
                 scale: 1,
               }}
               transition={{
-                delay: 1.55,
+                delay: 1.5,
                 duration: 0.8,
               }}
-              className="font-display mx-auto max-w-3xl text-[clamp(2.2rem,8vw,4.35rem)] leading-[1.08] tracking-[-0.045em] text-[#a92f3b]"
+              className="font-display relative z-10 mx-auto max-w-3xl text-[clamp(2.2rem,8vw,4.35rem)] leading-[1.08] tracking-[-0.045em] text-[#a92f3b]"
             >
               14 &amp; 15 February 2027
             </motion.p>
@@ -749,7 +1187,7 @@ export default function SaveTheDateExperience() {
                 y: 0,
               }}
               transition={{
-                delay: 1.85,
+                delay: 1.8,
               }}
               className="mt-3 flex items-center justify-center gap-2.5"
             >
@@ -773,7 +1211,7 @@ export default function SaveTheDateExperience() {
               opacity: 1,
             }}
             transition={{
-              delay: 2,
+              delay: 1.95,
             }}
             className="font-editorial mx-auto mt-4 max-w-md text-lg italic leading-7 text-[#654744]"
           >
@@ -784,7 +1222,7 @@ export default function SaveTheDateExperience() {
       </section>
 
       {/* COMPACT FINAL SECTION */}
-      <section className="relative border-t border-[#8f2633]/10 px-5 pb-8 pt-6 sm:px-8 sm:pb-10">
+      <section className="relative z-10 border-t border-[#8f2633]/10 bg-[#fff8ec]/85 px-5 pb-7 pt-5 backdrop-blur-[2px] sm:px-8 sm:pb-9">
         <motion.div
           initial={{
             opacity: 0,
@@ -819,7 +1257,7 @@ export default function SaveTheDateExperience() {
             }
           />
 
-          {/* SMALL CALENDAR ACTION */}
+          {/* SMALL CALENDAR */}
           <div className="mt-5 flex justify-center">
             <a
               href={calendarUrl}
@@ -835,7 +1273,7 @@ export default function SaveTheDateExperience() {
             </a>
           </div>
 
-          {/* SHARE ACTIONS */}
+          {/* SHARE */}
           <div className="mx-auto mt-3 grid max-w-xl gap-2.5 sm:grid-cols-2">
             <a
               href={whatsappUrl}
