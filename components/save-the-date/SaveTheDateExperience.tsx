@@ -29,12 +29,28 @@ import {
 /*                                   CONFIG                                   */
 /* -------------------------------------------------------------------------- */
 
-const SHARE_TEXT =
-  "\u2728 Save the Date \u2728\n\n" +                    // ✨
-  "Nishita Thaker \u2764\uFE0F Mayur Gami\n\n" +          // ❤️
-  "\uD83D\uDCC5 14 & 15 February 2027\n" +                // 📅
-  "\uD83D\uDCCD Mumbai\n\n" +                             // 📍
-  "#NishMayKiShaadi \u2764\uFE0F";   
+/*
+ * Emoji built from raw code points at runtime instead of literal glyphs
+ * in the source file. This is immune to file-encoding corruption
+ * (Latin-1/Windows-1252 re-saves), bundler mis-transforms, and
+ * copy-paste mangling — the only thing that could break this is the
+ * literal digits below, which are plain ASCII.
+ */
+const SPARKLE = String.fromCodePoint(0x2728); // ✨
+const HEART = String.fromCodePoint(0x2665); // ♥ (single codepoint — no variation selector, which WhatsApp mishandles)
+const CALENDAR = String.fromCodePoint(0x1f4c5); // 📅
+const PIN = String.fromCodePoint(0x1f4cd); // 📍
+
+const SHARE_TEXT = [
+  `${SPARKLE} Save the Date ${SPARKLE}`,
+  "",
+  `Nishita Thaker ${HEART} Mayur Gami`,
+  "",
+  `${CALENDAR} 14 & 15 February 2027`,
+  `${PIN} Mumbai`,
+  "",
+  `#NishMayKiShaadi ${HEART}`,
+].join("\n");
 
 const PETAL_COLORS = [
   "#f5a623",
@@ -43,6 +59,41 @@ const PETAL_COLORS = [
   "#f0b52f",
   "#d94453",
 ];
+
+/* -------------------------------------------------------------------------- */
+/*                         MANUAL UTF-8 PERCENT ENCODING                      */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * Encodes a string to percent-encoded UTF-8 bytes manually via
+ * TextEncoder, bypassing any environment-specific quirks in
+ * encodeURIComponent. This guarantees correct multi-byte emoji
+ * encoding (including surrogate pairs like the calendar/pin emoji)
+ * regardless of runtime.
+ */
+function toUtf8PercentEncoded(str: string): string {
+  const bytes = new TextEncoder().encode(str);
+  let out = "";
+
+  for (const b of bytes) {
+    const isUnreserved =
+      (b >= 0x30 && b <= 0x39) || // 0-9
+      (b >= 0x41 && b <= 0x5a) || // A-Z
+      (b >= 0x61 && b <= 0x7a) || // a-z
+      b === 0x2d || // -
+      b === 0x2e || // .
+      b === 0x5f || // _
+      b === 0x7e; // ~
+
+    if (isUnreserved) {
+      out += String.fromCharCode(b);
+    } else {
+      out += "%" + b.toString(16).toUpperCase().padStart(2, "0");
+    }
+  }
+
+  return out;
+}
 
 /* -------------------------------------------------------------------------- */
 /*                                  MANDALA                                   */
@@ -504,7 +555,7 @@ function Spark({
         ease: "easeInOut",
       }}
     >
-      ✦
+      {"\u2726"}
     </motion.span>
   );
 }
@@ -605,7 +656,7 @@ function WeddingInstruments() {
       </motion.svg>
 
       <span className="text-xs text-[#d89c31]">
-        ✦
+        {"\u2726"}
       </span>
 
       <motion.svg
@@ -650,7 +701,7 @@ function WeddingInstruments() {
       </motion.svg>
 
       <span className="text-xs text-[#d89c31]">
-        ✦
+        {"\u2726"}
       </span>
 
       <motion.svg
@@ -699,15 +750,15 @@ function FloralDivider() {
       <span className="h-px w-14 bg-gradient-to-r from-transparent to-[#d58d2d]" />
 
       <span className="text-[#e0a22f]">
-        ✦
+        {"\u2726"}
       </span>
 
       <span className="text-lg text-[#c63c46]">
-        ❈
+        {"\u2748"}
       </span>
 
       <span className="text-[#e0a22f]">
-        ✦
+        {"\u2726"}
       </span>
 
       <span className="h-px w-14 bg-gradient-to-l from-transparent to-[#d58d2d]" />
@@ -866,7 +917,7 @@ function DateMoment({
     >
       <div className="mb-2 flex items-center justify-center gap-2">
         <span className="text-sm text-[#d6922e]">
-          ❈
+          {"\u2748"}
         </span>
 
         <span className="h-px w-10 bg-[#d6922e]/45" />
@@ -878,7 +929,7 @@ function DateMoment({
         <span className="h-px w-10 bg-[#d6922e]/45" />
 
         <span className="text-sm text-[#d6922e]">
-          ❈
+          {"\u2748"}
         </span>
       </div>
 
@@ -1041,9 +1092,9 @@ function HashtagMoment({
         </motion.p>
 
         <div className="relative mt-1 flex items-center justify-center gap-3 text-[#ffe2a1]">
-          <span>✦</span>
-          <span>❈</span>
-          <span>✦</span>
+          <span>{"\u2726"}</span>
+          <span>{"\u2748"}</span>
+          <span>{"\u2726"}</span>
         </div>
       </motion.div>
     </motion.div>
@@ -1276,12 +1327,15 @@ export default function SaveTheDateExperience() {
   /* ------------------------------------------------------------------------ */
 
   const whatsappUrl = useMemo(() => {
-  const message = pageUrl
-    ? `${SHARE_TEXT}\n\n${pageUrl}`
-    : SHARE_TEXT;
+    const message = pageUrl
+      ? `${SHARE_TEXT}\n\n${pageUrl}`
+      : SHARE_TEXT;
 
-  return `https://wa.me/?text=${encodeURIComponent(message)}`;
-}, [pageUrl]);
+    // Standard encodeURIComponent + api.whatsapp.com/send, which is the
+    // endpoint WhatsApp's own decoder is tested against. wa.me and custom
+    // byte-level encoders were both being mishandled on the receiving end.
+    return `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+  }, [pageUrl]);
 
   const calendarUrl =
     useMemo(() => {
@@ -1725,19 +1779,19 @@ export default function SaveTheDateExperience() {
             aria-hidden="true"
             className="mt-4 flex items-center justify-center gap-3 text-[#d68e27]"
           >
-            <span>✦</span>
+            <span>{"\u2726"}</span>
 
             <span className="text-[#bd3743]">
-              ❈
+              {"\u2748"}
             </span>
 
             <Music2 size={14} />
 
             <span className="text-[#bd3743]">
-              ❈
+              {"\u2748"}
             </span>
 
-            <span>✦</span>
+            <span>{"\u2726"}</span>
           </div>
         </motion.div>
 
