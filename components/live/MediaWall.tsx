@@ -1,38 +1,163 @@
 "use client";
 
 import {
-  useEffect,
   useMemo,
   useState,
 } from "react";
 
 import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-} from "framer-motion";
-
-import {
-  ChevronLeft,
-  ChevronRight,
   Play,
+  Star,
 } from "lucide-react";
 
 import type {
   LiveMedia,
 } from "@/lib/live/getLiveWeddingData";
 
+import MediaLightbox from "@/components/live/MediaLightbox";
+
 type MediaWallProps = {
   media: LiveMedia[];
 };
 
-const AUTO_SLIDE_MS = 3500;
+type MediaRowProps = {
+  media: LiveMedia[];
+  direction:
+    | "left"
+    | "right";
+  duration: number;
+  onOpen: (
+    item: LiveMedia,
+  ) => void;
+};
+
+function MediaItem({
+  item,
+  onOpen,
+}: {
+  item: LiveMedia;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label="Open wedding moment"
+      className="group relative h-[112px] shrink-0 overflow-hidden rounded-[8px] bg-[#e9e0d7] text-left outline-none focus-visible:ring-2 focus-visible:ring-[#b45e43] sm:h-[145px] lg:h-[165px]"
+    >
+      {item.mediaType ===
+      "photo" ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={item.mediaUrl}
+          alt={
+            item.caption ??
+            "Wedding moment"
+          }
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className="h-full w-auto max-w-none object-contain transition-transform duration-500 group-hover:scale-[1.015]"
+        />
+      ) : (
+        <>
+          <video
+            src={item.mediaUrl}
+            muted
+            playsInline
+            preload="metadata"
+            className="h-full w-auto max-w-none object-contain"
+          />
+
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/10">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/50 bg-black/25 text-white backdrop-blur-sm">
+              <Play
+                size={14}
+                fill="currentColor"
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      {(item.caption ||
+        item.guestName) && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent px-2.5 pb-2 pt-7">
+          {item.caption && (
+            <p className="max-w-[220px] truncate text-[10px] leading-4 text-white">
+              {item.caption}
+            </p>
+          )}
+
+          {item.guestName && (
+            <p className="mt-0.5 text-[7px] uppercase tracking-[0.14em] text-white/65">
+              {item.guestName}
+            </p>
+          )}
+        </div>
+      )}
+
+      {item.isFeatured && (
+        <div className="pointer-events-none absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#f6f0e6]/90 text-[#b45e43] backdrop-blur-sm">
+          <Star
+            size={11}
+            fill="currentColor"
+          />
+        </div>
+      )}
+    </button>
+  );
+}
+
+function MediaRow({
+  media,
+  direction,
+  duration,
+  onOpen,
+}: MediaRowProps) {
+  if (media.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="media-row relative overflow-hidden">
+      <div
+        className={`flex w-max items-center gap-2 sm:gap-2.5 ${
+          direction ===
+          "left"
+            ? "media-track-left"
+            : "media-track-right"
+        }`}
+        style={{
+          animationDuration:
+            `${duration}s`,
+        }}
+      >
+        {media.map(
+          (item) => (
+            <MediaItem
+              key={item.id}
+              item={item}
+              onOpen={() =>
+                onOpen(item)
+              }
+            />
+          ),
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function MediaWall({
   media,
 }: MediaWallProps) {
-  const reduceMotion =
-    useReducedMotion();
+  const [
+    lightboxIndex,
+    setLightboxIndex,
+  ] = useState<
+    number | null
+  >(null);
 
   const sortedMedia =
     useMemo(() => {
@@ -64,308 +189,225 @@ export default function MediaWall({
       );
     }, [media]);
 
-  const [
-    activeIndex,
-    setActiveIndex,
-  ] = useState(0);
+  const rows =
+    useMemo(() => {
+      const row1:
+        LiveMedia[] =
+        [];
 
-  const [
-    isPaused,
-    setIsPaused,
-  ] = useState(false);
+      const row2:
+        LiveMedia[] =
+        [];
 
-  useEffect(() => {
-    if (
-      sortedMedia.length <= 1 ||
-      isPaused
-    ) {
-      return;
-    }
+      const row3:
+        LiveMedia[] =
+        [];
 
-    const timer =
-      window.setInterval(
-        () => {
-          setActiveIndex(
-            (current) =>
-              (current + 1) %
-              sortedMedia.length,
-          );
+      sortedMedia.forEach(
+        (
+          item,
+          index,
+        ) => {
+          if (
+            index % 3 ===
+            0
+          ) {
+            row1.push(
+              item,
+            );
+          } else if (
+            index % 3 ===
+            1
+          ) {
+            row2.push(
+              item,
+            );
+          } else {
+            row3.push(
+              item,
+            );
+          }
         },
-        AUTO_SLIDE_MS,
       );
 
-    return () => {
-      window.clearInterval(
-        timer,
-      );
-    };
-  }, [
-    sortedMedia.length,
-    isPaused,
-  ]);
+      return [
+        row1,
+        row2,
+        row3,
+      ];
+    }, [
+      sortedMedia,
+    ]);
 
-  useEffect(() => {
-    if (
-      activeIndex >=
-      sortedMedia.length
-    ) {
-      setActiveIndex(0);
+  function openMedia(
+    item: LiveMedia,
+  ) {
+    const index =
+      sortedMedia.findIndex(
+        (mediaItem) =>
+          mediaItem.id ===
+          item.id,
+      );
+
+    if (index !== -1) {
+      setLightboxIndex(
+        index,
+      );
     }
-  }, [
-    activeIndex,
-    sortedMedia.length,
-  ]);
+  }
 
   if (
-    sortedMedia.length === 0
+    sortedMedia.length ===
+    0
   ) {
     return null;
   }
 
-  const active =
-    sortedMedia[activeIndex];
-
-  function previous() {
-    setActiveIndex(
-      (current) =>
-        current === 0
-          ? sortedMedia.length - 1
-          : current - 1,
-    );
-  }
-
-  function next() {
-    setActiveIndex(
-      (current) =>
-        (current + 1) %
-        sortedMedia.length,
-    );
-  }
-
   return (
-    <section className="px-5 py-14 sm:px-6 sm:py-20">
-      <div className="mx-auto max-w-5xl">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-[9px] uppercase tracking-[0.28em] text-[#b45e43]">
-            Captured today
-          </p>
+    <>
+      <section className="overflow-hidden py-7 sm:py-9">
+        <div className="px-5 sm:px-6">
+          <div className="mx-auto max-w-5xl text-center">
+            <p className="text-[9px] uppercase tracking-[0.3em] text-[#b45e43]">
+              Captured today
+            </p>
 
-          <h2 className="font-display mt-3 text-3xl tracking-[-0.04em] text-[#35151c] sm:text-4xl">
-            Moments from the
-            celebration.
-          </h2>
-        </div>
+            <h2 className="font-display mt-2 text-3xl tracking-[-0.04em] text-[#35151c] sm:text-4xl">
+              Moments from the celebration.
+            </h2>
 
-        <div
-          className="mt-9 sm:mt-11"
-          onMouseEnter={() =>
-            setIsPaused(true)
-          }
-          onMouseLeave={() =>
-            setIsPaused(false)
-          }
-        >
-          <div className="relative mx-auto max-w-3xl">
-            <div className="relative overflow-hidden rounded-[22px] border border-[#35151c]/10 bg-[#e9e0d7] shadow-[0_18px_55px_rgba(53,21,28,0.08)]">
-              <div className="relative flex h-[430px] items-center justify-center sm:h-[520px]">
-                <AnimatePresence
-                  mode="wait"
-                  initial={false}
-                >
-                  <motion.div
-                    key={active.id}
-                    initial={
-                      reduceMotion
-                        ? false
-                        : {
-                            opacity: 0,
-                            scale:
-                              0.985,
-                          }
-                    }
-                    animate={{
-                      opacity: 1,
-                      scale: 1,
-                    }}
-                    exit={
-                      reduceMotion
-                        ? {
-                            opacity: 1,
-                          }
-                        : {
-                            opacity: 0,
-                            scale:
-                              0.99,
-                          }
-                    }
-                    transition={{
-                      duration:
-                        reduceMotion
-                          ? 0
-                          : 0.65,
-
-                      ease: [
-                        0.22,
-                        1,
-                        0.36,
-                        1,
-                      ],
-                    }}
-                    className="absolute inset-0 flex items-center justify-center p-3 sm:p-5"
-                  >
-                    {active.mediaType ===
-                    "photo" ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={
-                          active.mediaUrl
-                        }
-                        alt={
-                          active.caption ??
-                          "Wedding moment"
-                        }
-                        draggable={
-                          false
-                        }
-                        className="h-full w-full object-contain"
-                      />
-                    ) : (
-                      <video
-                        src={
-                          active.mediaUrl
-                        }
-                        controls
-                        playsInline
-                        preload="metadata"
-                        className="h-full w-full object-contain"
-                      />
-                    )}
-                  </motion.div>
-                </AnimatePresence>
-
-                {sortedMedia.length >
-                  1 && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={
-                        previous
-                      }
-                      aria-label="Previous moment"
-                      className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/80 text-[#35151c] shadow-sm backdrop-blur-md transition hover:bg-white sm:left-4"
-                    >
-                      <ChevronLeft
-                        size={18}
-                      />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={
-                        next
-                      }
-                      aria-label="Next moment"
-                      className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/80 text-[#35151c] shadow-sm backdrop-blur-md transition hover:bg-white sm:right-4"
-                    >
-                      <ChevronRight
-                        size={18}
-                      />
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-5 text-center">
-              {active.caption && (
-                <p className="font-editorial mx-auto max-w-xl text-base leading-6 text-[#35151c] sm:text-lg">
-                  {active.caption}
-                </p>
-              )}
-
-              <div className="mt-2 flex items-center justify-center gap-2 text-[9px] uppercase tracking-[0.18em] text-[#8d7c7e]">
-                {active.mediaType !==
-                  "photo" && (
-                  <>
-                    <Play
-                      size={11}
-                    />
-
-                    <span>
-                      Video
-                    </span>
-
-                    <span>
-                      ·
-                    </span>
-                  </>
-                )}
-
-                {active.guestName && (
-                  <span>
-                    Shared by{" "}
-                    {
-                      active.guestName
-                    }
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {sortedMedia.length >
-              1 && (
-              <>
-                <div className="mt-5 flex justify-center gap-1.5">
-                  {sortedMedia.map(
-                    (
-                      item,
-                      index,
-                    ) => (
-                      <button
-                        key={
-                          item.id
-                        }
-                        type="button"
-                        onClick={() =>
-                          setActiveIndex(
-                            index,
-                          )
-                        }
-                        aria-label={`Show moment ${
-                          index + 1
-                        }`}
-                        className={`h-1 rounded-full transition-all duration-500 ${
-                          index ===
-                          activeIndex
-                            ? "w-7 bg-[#b45e43]"
-                            : "w-2 bg-[#35151c]/15"
-                        }`}
-                      />
-                    ),
-                  )}
-                </div>
-
-                <p className="mt-3 text-center text-[9px] tracking-[0.16em] text-[#9a8b8d]">
-                  {String(
-                    activeIndex +
-                      1,
-                  ).padStart(
-                    2,
-                    "0",
-                  )}
-                  {" / "}
-                  {String(
-                    sortedMedia.length,
-                  ).padStart(
-                    2,
-                    "0",
-                  )}
-                </p>
-              </>
-            )}
+            <p className="mx-auto mt-2 max-w-md text-sm leading-5 text-[#76686a]">
+              Shared by friends
+              and family as the
+              celebration unfolds.
+            </p>
           </div>
         </div>
-      </div>
-    </section>
+
+        <div className="relative mt-6 sm:mt-7">
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-8 bg-gradient-to-r from-[#f6f0e6] to-transparent sm:w-20" />
+
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-8 bg-gradient-to-l from-[#f6f0e6] to-transparent sm:w-20" />
+
+          <div className="space-y-2 sm:space-y-2.5">
+            <MediaRow
+              media={rows[0]}
+              direction="left"
+              duration={70}
+              onOpen={
+                openMedia
+              }
+            />
+
+            <MediaRow
+              media={rows[1]}
+              direction="right"
+              duration={76}
+              onOpen={
+                openMedia
+              }
+            />
+
+            <MediaRow
+              media={rows[2]}
+              direction="left"
+              duration={64}
+              onOpen={
+                openMedia
+              }
+            />
+          </div>
+        </div>
+
+        <style jsx global>{`
+          @keyframes mediaTrackLeft {
+            from {
+              transform: translateX(
+                100vw
+              );
+            }
+
+            to {
+              transform: translateX(
+                -100%
+              );
+            }
+          }
+
+          @keyframes mediaTrackRight {
+            from {
+              transform: translateX(
+                -100%
+              );
+            }
+
+            to {
+              transform: translateX(
+                100vw
+              );
+            }
+          }
+
+          .media-track-left {
+            animation-name:
+              mediaTrackLeft;
+
+            animation-timing-function:
+              linear;
+
+            animation-iteration-count:
+              infinite;
+
+            will-change:
+              transform;
+          }
+
+          .media-track-right {
+            animation-name:
+              mediaTrackRight;
+
+            animation-timing-function:
+              linear;
+
+            animation-iteration-count:
+              infinite;
+
+            will-change:
+              transform;
+          }
+
+          @media (
+            prefers-reduced-motion:
+              reduce
+          ) {
+            .media-track-left,
+            .media-track-right {
+              animation: none;
+            }
+
+            .media-row {
+              overflow-x: auto;
+            }
+          }
+        `}</style>
+      </section>
+
+      <MediaLightbox
+        media={
+          sortedMedia
+        }
+        activeIndex={
+          lightboxIndex
+        }
+        onClose={() =>
+          setLightboxIndex(
+            null,
+          )
+        }
+        onChange={
+          setLightboxIndex
+        }
+      />
+    </>
   );
 }

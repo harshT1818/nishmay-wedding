@@ -6,19 +6,24 @@ import HappeningNow from "@/components/live/HappeningNow";
 import LiveFeed from "@/components/live/LiveFeed";
 import UploadMoment from "@/components/live/UploadMoment";
 import MediaWall from "@/components/live/MediaWall";
+import LiveAutoRefresh from "@/components/live/LiveAutoRefresh";
+import StickyLiveBar from "@/components/live/StickyLiveBar";
 
 export const dynamic =
   "force-dynamic";
 
 export default async function LivePage() {
-  const {
-    liveEvent,
-    updates,
-    media,
-  } = await getLiveWeddingData();
+const {
+  events,
+  liveEvent,
+  updates,
+  media,
+} =
+  await getLiveWeddingData();
 
   return (
     <main className="min-h-screen bg-[#f6f0e6] text-[#261b1d]">
+        <LiveAutoRefresh />
       <header className="px-5 pb-4 pt-7 sm:px-6 sm:pt-9">
         <div className="mx-auto flex max-w-4xl items-center justify-between border-b border-[#35151c]/10 pb-5">
           <div>
@@ -37,9 +42,10 @@ export default async function LivePage() {
         </div>
       </header>
 
-      <HappeningNow
+        <HappeningNow
         event={liveEvent}
-      />
+        events={events}
+        />
 
       <MediaWall
         media={media}
@@ -50,12 +56,16 @@ export default async function LivePage() {
       />
       
 
-<UploadMoment
-  eventId={
-    liveEvent?.id ??
-    null
-  }
-/>
+        <UploadMoment
+        eventId={
+            liveEvent?.id ??
+            null
+        }
+        />
+
+        <StickyLiveBar
+        event={liveEvent}
+        />
     </main>
   );
 }

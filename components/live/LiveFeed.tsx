@@ -26,7 +26,7 @@ export default function LiveFeed({
   updates,
 }: LiveFeedProps) {
   return (
-    <section className="px-5 py-12 sm:px-6 sm:py-16">
+    <section className="px-5 py-8 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-3xl">
         <p className="text-[9px] uppercase tracking-[0.28em] text-[#b45e43]">
           From the celebration

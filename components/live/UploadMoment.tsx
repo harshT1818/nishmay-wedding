@@ -322,7 +322,7 @@ export default function UploadMoment({
 
   if (submitted) {
     return (
-      <section className="px-5 py-12 sm:px-6 sm:py-16">
+      <section className="px-5 py-8 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-xl border-y border-[#35151c]/10 py-12 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-[#b99155]/40">
             <Check
